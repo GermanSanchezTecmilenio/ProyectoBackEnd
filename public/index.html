@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SGRH Empleados</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="sap-logo" aria-hidden="true">SAP</div>
+        <div class="brand-text">
+          <h1>SGRH-Employees</h1>
+        </div>
+      </div>
+
+      <div class="widgets">
+        <div class="widget" id="currentDate"></div>
+        <div class="widget" id="weather">Clima: --</div>
+        <div class="topbar-actions">
+          <button type="button" id="empExport" class="ghost tab-export">Exportar</button>
+          <button type="button" id="deptExport" class="ghost tab-export" hidden>Exportar</button>
+          <button type="button" id="incExport" class="ghost tab-export" hidden>Exportar</button>
+          <button type="button" id="dashExport" class="ghost tab-export" hidden>Exportar</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Secciones">
+      <button class="tab is-active" data-view="employeesView">Empleados</button>
+      <button class="tab" data-view="departmentsView">Departamentos</button>
+      <button class="tab" data-view="incidenciasView">Incidencias</button>
+      <button class="tab" data-view="dashboardView">Dashboard</button>
+    </nav>
+
+    <main class="container">
+      <section id="flash" class="flash" hidden></section>
+
+      <section id="dashboardView" class="view" hidden>
+        <div id="dashboardMain">
+          <div id="dashboardMetrics" class="metrics-grid"></div>
+
+          <div class="dash-grid dash-grid-main">
+            <div id="dashEmpByDept" class="card span-2"></div>
+            <div id="dashHeadcount" class="card span-2"></div>
+
+            <div id="dashTurnover" class="card span-2"></div>
+            <div class="card span-2 dash-stack">
+              <div id="dashEmpByTitle" class="dash-stack-item"></div>
+              <div class="dash-stack-divider"></div>
+              <div id="dashAvgSalaryByDept" class="dash-stack-item"></div>
+            </div>
+
+            <div id="dashIncidentsRecent" class="card span-4"></div>
+          </div>
+        </div>
+
+        <div id="dashboardDetail" class="dash-detail" hidden>
+          <div class="dash-detail-bar">
+            <button type="button" id="dashDetailBack" class="ghost">Regresar</button>
+            <div class="dash-detail-title">
+              <h3 id="dashDetailTitle"></h3>
+              <div id="dashDetailSubtitle" class="muted"></div>
+            </div>
+          </div>
+          <div id="dashDetailContent"></div>
+        </div>
+      </section>
+
+      <section id="employeesView" class="view">
+        <div id="employeesMeta" class="muted" hidden></div>
+
+        <form id="employeeSearchForm" class="filterbar">
+          <label class="field">
+            <span>Buscar</span>
+            <input id="employeeQuery" type="text" placeholder="No. empleado o nombre…" />
+          </label>
+
+          <label class="field">
+            <span>Departamento</span>
+            <select id="employeeDept"></select>
+          </label>
+
+          <label class="field">
+            <span>Género</span>
+            <select id="employeeGender">
+              <option value="">Todos</option>
+              <option value="M">M</option>
+              <option value="F">F</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Ingreso desde</span>
+            <input id="employeeHireFrom" type="date" />
+          </label>
+
+          <label class="field">
+            <span>Ingreso hasta</span>
+            <input id="employeeHireTo" type="date" />
+          </label>
+
+          <div class="field field-actions">
+            <button type="submit" class="primary">Buscar</button>
+            <button id="employeeClear" type="button" class="ghost">Limpiar</button>
+          </div>
+        </form>
+
+        <div class="split">
+          <div class="card">
+            <div class="table-toolbar">
+              <div id="employeesItems" class="muted"></div>
+              <div class="pager">
+                <button id="empPrev" type="button" class="ghost">Anterior</button>
+                <button id="empNext" type="button" class="ghost">Siguiente</button>
+              </div>
+            </div>
+            <div id="employeesList"></div>
+          </div>
+
+          <div class="card">
+            <h3>Detalle</h3>
+            <div id="employeeDetail" class="muted">Selecciona un empleado para ver su detalle.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="departmentsView" class="view" hidden>
+        <div class="split split-departments">
+          <div class="card">
+            <form id="deptSearchForm" class="panel">
+              <input id="deptQuery" type="text" placeholder="Buscar departamento..." />
+              <button type="submit">Filtrar</button>
+              <button id="deptClear" type="button" class="ghost">Limpiar</button>
+            </form>
+            <div id="departmentsList"></div>
+          </div>
+          <div class="card">
+            <div id="departmentDashboard" class="muted">Selecciona un departamento.</div>
+          </div>
+          <div class="card dept-detail">
+            <h3>Detalle del departamento</h3>
+            <div id="departmentDetail" class="muted">Selecciona un departamento.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="incidenciasView" class="view" hidden>
+        <h2 class="text-center">Registro de Incidencias</h2>
+
+        <form id="incidenciaForm" class="card incidencia-form">
+          <div class="field-row">
+            <label class="field">
+              <span>Numero de Empleado</span>
+              <input type="number" id="emp_no" min="1" required />
+            </label>
+
+            <label class="field">
+              <span>Nombre y Apellido</span>
+              <input type="text" id="emp_full_name" readonly />
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Tipo</span>
+            <select id="tipo" required>
+              <option value="" selected disabled>Selecciona un tipo…</option>
+              <option value="Asistencia">Asistencia</option>
+              <option value="Tiempo Extra">Tiempo Extra</option>
+              <option value="Permisos">Permisos</option>
+              <option value="Médica">Médica</option>
+              <option value="Disciplinaria">Disciplinaria</option>
+              <option value="Administrativa">Administrativa</option>
+              <option value="Nómina">Nómina</option>
+              <option value="Desempeño">Desempeño</option>
+              <option value="Capacitación">Capacitación</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Descripción</span>
+            <textarea id="descripcion" rows="3" minlength="10" maxlength="255" required></textarea>
+          </label>
+
+          <label class="field">
+            <span>Estatus</span>
+            <select id="estatus" required>
+              <option value="abierta">Abierta</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="cerrada">Cerrada</option>
+            </select>
+          </label>
+
+          <div class="actions">
+            <button type="submit" id="incSave">Guardar</button>
+            <button type="button" id="incCancel" class="ghost" hidden>Cancelar edición</button>
+          </div>
+        </form>
+
+        <div class="card">
+          <h3 class="text-center incidencias-subtitle">Detalle de Incidentes</h3>
+          <div id="incidenciasList"></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
