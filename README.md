@@ -81,6 +81,15 @@ Advertencia: esto modifica datos del sample dataset y puede tardar varios minuto
 3. Abrir en el navegador:
    - `http://localhost:3000`
 
+## Documentación Swagger (OpenAPI)
+
+Con el servidor corriendo:
+
+- Swagger UI: `http://localhost:3000/api-docs`
+- Spec JSON: `http://localhost:3000/api-docs.json`
+
+Nota: `public/api-docs.html` carga Swagger UI desde CDN (unpkg). Si necesitas usarlo 100% offline, dímelo y lo dejo sirviendo assets locales.
+
 ## Endpoints principales
 
 - `GET /api/employees?q=...` (busqueda por emp_no o nombre)

@@ -10,9 +10,36 @@
   --sap-accent-weak: rgba(10, 110, 209, 0.14);
   --sap-danger: #bb0000;
   --sap-success: #107e3e;
+  --sap-input-border: #bfbfbf;
+  --sap-row-even: #fafafa;
+  --sap-track: #e9edf3;
+  --sap-topbar-grad-start: #ffffff;
+  --sap-placeholder: rgba(91, 115, 139, 0.7);
   --radius: 4px;
   --shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
   --topbar-height: 56px;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --sap-bg: #0b121a;
+  --sap-surface: #111c27;
+  --sap-surface-2: #0f1822;
+  --sap-border: #27364a;
+  --sap-border-soft: #1f2b3b;
+  --sap-text: #e8f0ff;
+  --sap-muted: #a7bbd3;
+  --sap-accent: #4ba3ff;
+  --sap-accent-weak: rgba(75, 163, 255, 0.22);
+  --sap-danger: #ff5c5c;
+  --sap-success: #3bd780;
+  --sap-input-border: #3a4d65;
+  --sap-row-even: rgba(255, 255, 255, 0.03);
+  --sap-track: #1a2736;
+  --sap-topbar-grad-start: #0f1822;
+  --sap-placeholder: rgba(167, 187, 211, 0.75);
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  color-scheme: dark;
 }
 
 * {
@@ -53,7 +80,7 @@ p {
   justify-content: space-between;
   gap: 16px;
   padding: 10px 16px;
-  background: linear-gradient(#ffffff, var(--sap-surface-2));
+  background: linear-gradient(var(--sap-topbar-grad-start), var(--sap-surface-2));
   border-bottom: 1px solid var(--sap-border);
   position: sticky;
   top: 0;
@@ -131,6 +158,13 @@ p {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.topbar-actions .topbar-theme {
+  min-height: 34px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .topbar-actions .tab-export {
@@ -327,6 +361,7 @@ tr.is-selected td {
   display: flex;
   gap: 8px;
   align-items: end;
+  flex-wrap: wrap;
 }
 
 .text-center {
@@ -369,7 +404,7 @@ input,
 select {
   height: 30px;
   padding: 4px 8px;
-  border: 1px solid #bfbfbf;
+  border: 1px solid var(--sap-input-border);
   border-radius: var(--radius);
   background: var(--sap-surface);
   color: var(--sap-text);
@@ -377,7 +412,7 @@ select {
 
 textarea {
   padding: 6px 8px;
-  border: 1px solid #bfbfbf;
+  border: 1px solid var(--sap-input-border);
   border-radius: var(--radius);
   background: var(--sap-surface);
   color: var(--sap-text);
@@ -385,13 +420,13 @@ textarea {
 }
 
 input::placeholder {
-  color: rgba(91, 115, 139, 0.7);
+  color: var(--sap-placeholder);
 }
 
 button {
   height: 30px;
   padding: 4px 10px;
-  border: 1px solid #bfbfbf;
+  border: 1px solid var(--sap-input-border);
   border-radius: var(--radius);
   background: var(--sap-surface);
   color: var(--sap-text);
@@ -673,7 +708,7 @@ button:focus {
 .hbar-track {
   height: 10px;
   border-radius: 999px;
-  background: #e9edf3;
+  background: var(--sap-track);
   overflow: hidden;
 }
 
@@ -813,7 +848,7 @@ button:focus {
 .sorttab {
   height: 26px;
   padding: 2px 8px;
-  border: 1px solid #bfbfbf;
+  border: 1px solid var(--sap-input-border);
   border-radius: var(--radius);
   background: var(--sap-surface);
   color: var(--sap-text);
@@ -905,7 +940,18 @@ button:focus {
 }
 
 .table tbody tr:nth-child(even) {
-  background: #fafafa;
+  background: var(--sap-row-even);
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll .table {
+  width: max-content;
+  min-width: 100%;
 }
 
 .table tbody tr.is-clickable {
@@ -999,5 +1045,97 @@ button.link:hover {
   .field {
     min-width: 0;
     flex: 1 1 200px;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+
+  .widgets {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .topbar-actions {
+    flex-wrap: wrap;
+  }
+
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .tab {
+    white-space: nowrap;
+    min-height: 38px;
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+
+  .container {
+    padding: 12px 12px 20px;
+  }
+
+  .table-toolbar {
+    flex-wrap: wrap;
+    align-items: start;
+  }
+
+  .pager {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .dash-detail-bar {
+    flex-wrap: wrap;
+    align-items: start;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-text h1 {
+    font-size: 15px;
+  }
+
+  .topbar .widgets .widget {
+    font-size: 13px;
+    padding: 7px 9px;
+  }
+
+  .filterbar,
+  .panel {
+    padding: 10px;
+  }
+
+  .field {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .field-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .dash-title {
+    font-size: clamp(18px, 6vw, 26px);
+  }
+
+  .metric-value {
+    font-size: clamp(18px, 7vw, 26px);
+  }
+
+  .metric-btn {
+    min-height: 80px;
   }
 }

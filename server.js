@@ -9,6 +9,14 @@ try {
 const express = require("express");
 const mysql = require("mysql2/promise");
 const path = require("path");
+let openapiSpec = null;
+try {
+  // Swagger/OpenAPI spec (si no está disponible, el server debe seguir arrancando)
+  // eslint-disable-next-line global-require
+  openapiSpec = require("./docs/openapi");
+} catch (err) {
+  console.warn("[DOCS] No se pudo cargar docs/openapi.js:", err?.message || err);
+}
 
 // Defaults integrados (pueden ser sobre-escritos por variables de entorno o .env)
 const DEFAULT_PORT = 3000;
@@ -35,6 +43,18 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, "public")));
+
+/* Swagger UI (OpenAPI) */
+app.get("/api-docs", (_req, res) => res.redirect("/api-docs.html"));
+app.get("/api-docs.json", (_req, res) => {
+  if (!openapiSpec) {
+    return res.status(500).json({
+      mensaje: "No se pudo cargar el spec OpenAPI.",
+      detalle: "Revisa que exista docs/openapi.js y que Node tenga permisos para leerlo."
+    });
+  }
+  res.json(openapiSpec);
+});
 
 /* DB */
 const DB_HOST = (process.env.DB_HOST || DEFAULT_DB_HOST).trim();

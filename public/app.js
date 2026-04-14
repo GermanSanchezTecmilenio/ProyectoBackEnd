@@ -1,6 +1,8 @@
 const flashEl = document.getElementById("flash");
 const dateEl = document.getElementById("currentDate");
 const weatherEl = document.getElementById("weather");
+const themeToggleBtn = document.getElementById("themeToggle");
+const topbarEl = document.querySelector(".topbar");
 
 const tabs = Array.from(document.querySelectorAll(".tab"));
 const views = Array.from(document.querySelectorAll(".view"));
@@ -68,6 +70,73 @@ let incidenciasLastRows = [];
 
 let empFullNameLookupTimer = null;
 let empFullNameLookupToken = 0;
+
+const THEME_STORAGE_KEY = "sgrh_theme";
+
+function getSystemTheme() {
+  try {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
+function applyTheme(theme) {
+  const safeTheme = theme === "dark" ? "dark" : "light";
+  document.documentElement.dataset.theme = safeTheme;
+
+  if (themeToggleBtn) {
+    const isDark = safeTheme === "dark";
+    themeToggleBtn.setAttribute("aria-pressed", String(isDark));
+    themeToggleBtn.textContent = isDark ? "Tema: Oscuro" : "Tema: Claro";
+    themeToggleBtn.title = isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
+  }
+}
+
+function initTheme() {
+  let saved = "";
+  try {
+    saved = String(localStorage.getItem(THEME_STORAGE_KEY) || "").trim().toLowerCase();
+  } catch {
+    saved = "";
+  }
+  const initial = saved === "dark" || saved === "light" ? saved : getSystemTheme();
+  applyTheme(initial);
+}
+
+function setTheme(theme) {
+  const safeTheme = theme === "dark" ? "dark" : "light";
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, safeTheme);
+  } catch {
+    // ignore storage errors (private mode / disabled storage)
+  }
+  applyTheme(safeTheme);
+}
+
+function syncTopbarHeight() {
+  if (!topbarEl) return;
+  const px = `${topbarEl.offsetHeight || 56}px`;
+  document.documentElement.style.setProperty("--topbar-height", px);
+}
+
+initTheme();
+syncTopbarHeight();
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener("click", () => {
+    const current = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    setTheme(current === "dark" ? "light" : "dark");
+  });
+}
+
+if (topbarEl) {
+  window.addEventListener("resize", syncTopbarHeight);
+  window.addEventListener("orientationchange", syncTopbarHeight);
+  if (typeof ResizeObserver !== "undefined") {
+    new ResizeObserver(syncTopbarHeight).observe(topbarEl);
+  }
+}
 
 function setEmployeeFullName(value) {
   if (!empFullNameEl) return;
@@ -874,7 +943,8 @@ function renderTable({ columns, rows, actions, className = "" }) {
 
   const extraClass = String(className || "").trim();
   const cls = extraClass ? `table ${extraClass}` : "table";
-  return `<table class="${escapeHtml(cls)}"><thead><tr>${head}${actionHead}</tr></thead><tbody>${body}</tbody></table>`;
+  const tableHtml = `<table class="${escapeHtml(cls)}"><thead><tr>${head}${actionHead}</tr></thead><tbody>${body}</tbody></table>`;
+  return `<div class="table-scroll">${tableHtml}</div>`;
 }
 
 function renderSortHeaderButton({ key, label, state }) {
@@ -2121,79 +2191,88 @@ empExportBtn.addEventListener("click", () => {
   downloadExcel("empleados.xls", [{ title: "Empleados", rows }]);
 });
 
-dashExportBtn.addEventListener("click", async () => {
-  try {
-    const data = dashboardLastData || (await fetchJson("/api/dashboard/resumen"));
-    dashboardLastData = data;
+if (dashExportBtn) {
+  dashExportBtn.addEventListener("click", async () => {
+    try {
+      const data = dashboardLastData || (await fetchJson("/api/dashboard/resumen"));
+      dashboardLastData = data;
 
-    const resumen = [
-      { Métrica: "Total de empleados", Valor: data.totalEmpleados ?? "" },
-      { Métrica: "Total de departamentos", Valor: data.totalDepartamentos ?? "" },
-      { Métrica: "Total de gerentes", Valor: data.totalGerentes ?? "" },
-      { Métrica: "Costo nómina mensual", Valor: data.costoNominaMensual ?? "" },
-      { Métrica: "Salario promedio", Valor: data.salarioPromedio ?? "" },
-      { Métrica: "Incidencias (Mes a la fecha)", Valor: data.incidenciasMesATD ?? "" }
-    ];
+      const resumen = [
+        { Métrica: "Total de empleados", Valor: data.totalEmpleados ?? "" },
+        { Métrica: "Total de departamentos", Valor: data.totalDepartamentos ?? "" },
+        { Métrica: "Total de gerentes", Valor: data.totalGerentes ?? "" },
+        { Métrica: "Costo nómina mensual", Valor: data.costoNominaMensual ?? "" },
+        { Métrica: "Salario promedio", Valor: data.salarioPromedio ?? "" },
+        { Métrica: "Incidencias (Mes a la fecha)", Valor: data.incidenciasMesATD ?? "" }
+      ];
 
-    const sections = [
-      { title: "Resumen", rows: resumen },
-      {
-        title: "Empleados por departamento",
-        rows: (data.empleadosPorDepartamento || []).map((r) => ({
-          Departamento: translateDeptName(r.dept_name),
-          Total: r.total
-        }))
-      },
-      {
-        title: "Rotación de personal por año",
-        rows: (data.rotacionPorAnio || []).map((r) => ({
-          Año: r.year,
-          Bajas: r.separations,
-          "Headcount promedio": r.headcount_avg,
-          "% Rotación": r.turnover_pct
-        }))
-      },
-      {
-        title: "Headcount por año",
-        rows: (data.headcountPorAnio || []).map((r) => ({ Año: r.year, Contrataciones: r.hires, Total: r.total }))
-      },
-      {
-        title: "Empleados por puesto",
-        rows: (data.empleadosPorTitulo || []).map((r) => ({ Puesto: translateJobTitle(r.title), Total: r.total }))
-      },
-      {
-        title: "Gerentes por departamento",
-        rows: (data.gerentesPorDepartamento || []).map((r) => ({
-          Departamento: translateDeptName(r.dept_name),
-          Gerentes: r.total
-        }))
-      },
-      {
-        title: "Salario por departamento",
-        rows: (data.salarioPromedioPorDepartamento || []).map((r) => ({
-          Departamento: translateDeptName(r.dept_name),
-          Promedio: r.avg_salary
-        }))
-      },
-      {
-        title: "Incidencias recientes",
-        rows: (data.incidenciasRecientes || []).map((r) => ({
-          ID: r.id_incidencia,
-          "No. de Empleado": r.emp_no,
-          Empleado: `${r.first_name || ""} ${r.last_name || ""}`.trim() || "-",
-          Departamento: translateDeptName(r.dept_name) || "-",
-          Tipo: r.tipo,
-          Fecha: formatDate(r.fecha),
-          Estatus: r.estatus
-        }))
-      }
-    ];
+      const sections = [
+        { title: "Resumen", rows: resumen },
+        {
+          title: "Empleados por departamento",
+          rows: (data.empleadosPorDepartamento || []).map((r) => ({
+            Departamento: translateDeptName(r.dept_name),
+            Total: r.total
+          }))
+        },
+        {
+          title: "Rotación de personal por año",
+          rows: (data.rotacionPorAnio || []).map((r) => ({
+            Año: r.year,
+            Bajas: r.separations,
+            "Headcount promedio": r.headcount_avg,
+            "% Rotación": r.turnover_pct
+          }))
+        },
+        {
+          title: "Headcount por año",
+          rows: (data.headcountPorAnio || []).map((r) => ({
+            Año: r.year,
+            Contrataciones: r.hires,
+            Total: r.total
+          }))
+        },
+        {
+          title: "Empleados por puesto",
+          rows: (data.empleadosPorTitulo || []).map((r) => ({
+            Puesto: translateJobTitle(r.title),
+            Total: r.total
+          }))
+        },
+        {
+          title: "Gerentes por departamento",
+          rows: (data.gerentesPorDepartamento || []).map((r) => ({
+            Departamento: translateDeptName(r.dept_name),
+            Gerentes: r.total
+          }))
+        },
+        {
+          title: "Salario por departamento",
+          rows: (data.salarioPromedioPorDepartamento || []).map((r) => ({
+            Departamento: translateDeptName(r.dept_name),
+            Promedio: r.avg_salary
+          }))
+        },
+        {
+          title: "Incidencias recientes",
+          rows: (data.incidenciasRecientes || []).map((r) => ({
+            ID: r.id_incidencia,
+            "No. de Empleado": r.emp_no,
+            Empleado: `${r.first_name || ""} ${r.last_name || ""}`.trim() || "-",
+            Departamento: translateDeptName(r.dept_name) || "-",
+            Tipo: r.tipo,
+            Fecha: formatDate(r.fecha),
+            Estatus: r.estatus
+          }))
+        }
+      ];
 
-    downloadExcel("dashboard_rh.xls", sections);
-  } catch (err) {
-    setFlash(String(err?.message || err));
-  }
-});
+      downloadExcel("dashboard_rh.xls", sections);
+    } catch (err) {
+      setFlash(String(err?.message || err));
+    }
+  });
+}
 
 deptExportBtn.addEventListener("click", async () => {
   try {
